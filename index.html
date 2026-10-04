@@ -476,20 +476,18 @@ ok ? "ELIGIBLE" : "BLOCKED";
    QR now uses the logged-in student's PRN.
 */
 
-const qr =
-document.getElementById("qrcode");
+const qr = document.getElementById("qrcode");
 
-qr.innerHTML="";
+qr.innerHTML = "";
 
+const verifyURL =
+"https://sonwanebharti2002-source.github.io/smart-hall-ticket-system/verify.html?prn="
++ encodeURIComponent(p);
 
-new QRCode(qr,{
-
-text:"VERIFY-"+p,
-
-width:180,
-
-height:180
-
+new QRCode(qr, {
+    text: verifyURL,
+    width: 180,
+    height: 180
 });
 
 }
