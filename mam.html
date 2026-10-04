@@ -144,16 +144,16 @@ async function onScanSuccess(decodedText){
     );
 
   if(error){
-
-    console.error(error);
-
     result.innerHTML =
       "<div class='error'>" +
-      "❌ Database verification failed." + 
+      "❌ Database verification failed<br><br>" +
+      "Error: " + error.message +
       "</div>";
-
     return;
   }
+
+    
+  
 
   if(!data || data.length === 0){
 
