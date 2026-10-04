@@ -135,13 +135,12 @@ async function onScanSuccess(decodedText){
   // DATABASE VERIFICATION
   // ===============================
 
-  const { data, error } =
-    await supabaseClient.rpc(
-      "verify_student",
-      {
-        verification_id: decodedText
-      }
-    );
+  const verificationId = decodedText.trim();
+
+const { data, error } = await supabaseClient
+  .rpc("verify_student", {
+    verification_id: verificationId
+  });
 
   if(error){
     result.innerHTML =
