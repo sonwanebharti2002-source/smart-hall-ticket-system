@@ -149,7 +149,7 @@ async function onScanSuccess(decodedText){
 
     result.innerHTML =
       "<div class='error'>" +
-      "❌ Database verification failed." +
+      "❌ Database verification failed." + 
       "</div>";
 
     return;
@@ -159,7 +159,7 @@ async function onScanSuccess(decodedText){
 
     result.innerHTML =
       "<div class='error'>" +
-      "❌ Student record not found." +
+      "❌ Student record not found." + error.message 
       "</div>";
 
     return;
