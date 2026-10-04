@@ -270,19 +270,46 @@ async function onScanSuccess(decodedText){
 }
 
 
-const scanner =
-new Html5QrcodeScanner(
-    "reader",
-    {
-        fps:10,
-        qrbox:{
-            width:250,
-            height:250
-        }
-    }
-);
+const html5QrCode = new Html5Qrcode("reader");
 
-scanner.render(onScanSuccess);
+async function startBackCamera() {
+    try {
+        const cameras = await Html5Qrcode.getCameras();
+
+        if (!cameras || cameras.length === 0) {
+            throw new Error("Camera not found");
+        }
+
+        // Back / rear camera शोधा
+        let backCamera = cameras.find(camera =>
+            /back|rear|environment|facing back/i.test(camera.label)
+        );
+
+        // Back camera सापडली नाही तर शेवटचा camera वापरा
+        const cameraId = backCamera ? backCamera.id : cameras[cameras.length - 1].id;
+
+        await html5QrCode.start(
+            cameraId,
+            {
+                fps: 10,
+                qrbox: {
+                    width: 250,
+                    height: 250
+                }
+            },
+            onScanSuccess,
+            function(errorMessage) {
+                // QR scan होत नसताना error दाखवू नका
+            }
+        );
+
+    } catch (error) {
+        document.getElementById("result").innerHTML =
+            "❌ Camera start failed<br>" + error.message;
+    }
+}
+
+startBackCamera();
 
 </script>
 
