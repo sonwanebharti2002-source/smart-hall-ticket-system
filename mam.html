@@ -1,70 +1,78 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Invigilator Verification</title>
+
+<title>People Education Society - QR Verification</title>
 
 <script src="https://unpkg.com/html5-qrcode"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 body{
-  font-family:Arial,sans-serif;
-  background:#f3f6fb;
-  margin:0;
-  padding:20px;
-  color:#172033;
+    margin:0;
+    padding:20px;
+    font-family:Arial,sans-serif;
+    background:#f2f5fa;
 }
+
 .card{
-  max-width:480px;
-  margin:auto;
-  background:white;
-  padding:24px;
-  border-radius:20px;
-  box-shadow:0 10px 35px #0002;
+    max-width:500px;
+    margin:auto;
+    background:white;
+    padding:22px;
+    border-radius:18px;
+    box-shadow:0 8px 30px rgba(0,0,0,.12);
 }
-h1{text-align:center;margin-bottom:5px}
-.sub{text-align:center;color:#667085;margin-bottom:20px}
-#reader{width:100%;margin:auto}
+
+h1{
+    text-align:center;
+    margin-bottom:5px;
+}
+
+.subtitle{
+    text-align:center;
+    color:#666;
+    margin-bottom:20px;
+}
+
+#reader{
+    width:100%;
+}
+
 .result{
-  margin-top:20px;
-  padding:18px;
-  border-radius:14px;
-  background:#f5f7fa;
+    margin-top:20px;
+    padding:18px;
+    border-radius:14px;
 }
+
+.success{
+    background:#eaf8ef;
+    color:#126b35;
+}
+
+.fail{
+    background:#fff0f0;
+    color:#a51d1d;
+}
+
+.info{
+    background:#f5f7fa;
+}
+
 .row{
-  display:flex;
-  justify-content:space-between;
-  padding:9px 0;
-  border-bottom:1px solid #e5e7eb;
+    display:flex;
+    justify-content:space-between;
+    padding:9px 0;
+    border-bottom:1px solid #ddd;
 }
-.key{color:#667085}
-.value{font-weight:bold}
-.eligible{
-  margin-top:18px;
-  padding:15px;
-  border-radius:12px;
-  background:#eaf8ef;
-  color:#18733b;
-  font-weight:bold;
-  text-align:center;
+
+.label{
+    color:#666;
 }
-.blocked{
-  margin-top:18px;
-  padding:15px;
-  border-radius:12px;
-  background:#fff0f0;
-  color:#b42318;
-  font-weight:bold;
-  text-align:center;
-}
-.error{
-  padding:15px;
-  border-radius:12px;
-  background:#fff0f0;
-  color:#b42318;
-  text-align:center;
+
+.value{
+    font-weight:bold;
 }
 </style>
 </head>
@@ -73,214 +81,186 @@ h1{text-align:center;margin-bottom:5px}
 
 <div class="card">
 
-<h1>Invigilator QR Scanner</h1>
+<h1>QR Verification</h1>
 
-<div class="sub">
+<div class="subtitle">
 People Education Society<br>
 Mid-Sem Examination
 </div>
 
 <div id="reader"></div>
 
-<div id="result" class="result">
-Scan a student's QR code.
+<div id="result" class="result info">
+Scan Student QR Code
 </div>
 
 </div>
 
 <script>
 
-// ===============================
-// SUPABASE CONNECTION
-// ===============================
+const SUPABASE_URL =
+"https://xxkqbwkstmwbqkhmiwwk.supabase.co";
 
-const SUPABASE_URL = "https://xxkqbwkstmwbqkhmiwwk.supabase.co";
-const SUPABASE_KEY = "sb_publishable_y5oAZE8Hda93X-EedG5FTw_MNoV97pD";
+const SUPABASE_KEY =
+"sb_publishable_y5oAZE8Hda93X-EedG5FTw_MNoV97pD";
 
-async function verifyStudent(verificationId) {
-  const response = await fetch(
-    SUPABASE_URL + "/rest/v1/rpc/verify_student",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "apikey": SUPABASE_KEY,
-        "Authorization": "Bearer " + SUPABASE_KEY
-      },
-      body: JSON.stringify({
-        verification_id: verificationId
-      })
+
+async function verifyStudent(prn){
+
+    const response = await fetch(
+        SUPABASE_URL + "/rest/v1/rpc/verify_student",
+        {
+            method:"POST",
+
+            headers:{
+                "Content-Type":"application/json",
+                "apikey":SUPABASE_KEY,
+                "Authorization":"Bearer " + SUPABASE_KEY
+            },
+
+            body:JSON.stringify({
+                verification_id:"VERIFY-" + prn
+            })
+        }
+    );
+
+    const data = await response.json();
+
+    if(!response.ok){
+        throw new Error(
+            data.message ||
+            data.error ||
+            JSON.stringify(data)
+        );
     }
-  );
 
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || data.error_description || JSON.stringify(data));
-  }
-
-  return data;
+    return data;
 }
 
-
-// ===============================
-// QR SCAN
-// ===============================
 
 async function onScanSuccess(decodedText){
 
-  // Stop scanner after successful scan
-  try{
-    await scanner.clear();
-  }catch(e){}
+    const result =
+        document.getElementById("result");
 
-  const result = document.getElementById("result");
-
-  result.innerHTML =
-    "<p>Checking student record...</p>";
-
-  // Accept only our verification format
-  if(!decodedText.startsWith("VERIFY-")){
+    result.className="result info";
 
     result.innerHTML =
-      "<div class='error'>" +
-      "❌ Invalid Hall Ticket QR" +
-      "</div>";
+        "⏳ Verifying student...";
 
-    return;
-  }
+    try{
 
-  // ===============================
-  // DATABASE VERIFICATION
-  // ===============================
+        if(!decodedText.startsWith("VERIFY-")){
 
-  const verificationId = decodedText.trim();
+            throw new Error(
+                "Invalid Hall Ticket QR"
+            );
+        }
 
-let data;
+        const prn =
+            decodedText.replace("VERIFY-","").trim();
 
-try {
-  data = await verifyStudent(decodedText.trim());
-} catch (error) {
-  result.innerHTML =
-    "<div class='error'>❌ Database verification failed<br><br>" +
-    "Error: " + error.message +
-    "</div>";
-  return;
-}
+        const data =
+            await verifyStudent(prn);
 
-  if(error){
-    result.innerHTML =
-      "<div class='error'>" +
-      "❌ Database verification failed<br><br>" +
-      "Error: " + error.message +
-      "</div>";
-    return;
-  }
+        if(!data || data.length === 0){
 
-    
-  
+            throw new Error(
+                "Student record not found"
+            );
+        }
 
-  if(!data || data.length === 0){
+        const s=data[0];
 
-    result.innerHTML =
-      "<div class='error'>" +
-      "❌ Student record not found." + error.message 
-      "</div>";
+        result.innerHTML=`
 
-    return;
-  }
+        <h2>Student Verified ✅</h2>
 
-  const student = data[0];
+        <div class="row">
+        <span class="label">Name</span>
+        <span class="value">${s.name}</span>
+        </div>
 
-  // ===============================
-  // DISPLAY STUDENT INFORMATION
-  // ===============================
+        <div class="row">
+        <span class="label">PRN</span>
+        <span class="value">${s.prn}</span>
+        </div>
 
-  result.innerHTML = `
+        <div class="row">
+        <span class="label">Branch</span>
+        <span class="value">${s.branch}</span>
+        </div>
 
-    <h2 style="margin-top:0;">
-      Student Verified
-    </h2>
+        <div class="row">
+        <span class="label">Year / Semester</span>
+        <span class="value">${s.year_sem}</span>
+        </div>
 
-    <div class="row">
-      <span class="key">Name</span>
-      <span class="value">${student.name}</span>
-    </div>
+        <div class="row">
+        <span class="label">Fees</span>
+        <span class="value">${s.fees_status}</span>
+        </div>
 
-    <div class="row">
-      <span class="key">PRN</span>
-      <span class="value">${student.prn}</span>
-    </div>
+        <div class="row">
+        <span class="label">Attendance</span>
+        <span class="value">${s.attendance}%</span>
+        </div>
 
-    <div class="row">
-      <span class="key">Branch</span>
-      <span class="value">${student.branch}</span>
-    </div>
+        <div class="row">
+        <span class="label">Roll No.</span>
+        <span class="value">${s.roll_no}</span>
+        </div>
 
-    <div class="row">
-      <span class="key">Year / Semester</span>
-      <span class="value">${student.year_sem}</span>
-    </div>
+        <div class="row">
+        <span class="label">Bench</span>
+        <span class="value">${s.bench_no}</span>
+        </div>
 
-    <div class="row">
-      <span class="key">Fees</span>
-      <span class="value">${student.fees_status}</span>
-    </div>
+        ${
+            s.eligible
 
-    <div class="row">
-      <span class="key">Attendance</span>
-      <span class="value">${student.attendance}%</span>
-    </div>
+            ?
 
-    <div class="row">
-      <span class="key">Roll No.</span>
-      <span class="value">${student.roll_no}</span>
-    </div>
+            `<div class="result success">
+            ✅ ELIGIBLE<br>
+            Entry Allowed
+            </div>`
 
-    <div class="row">
-      <span class="key">Allotted Bench</span>
-      <span class="value">${student.bench_no}</span>
-    </div>
+            :
 
-    ${
-      student.eligible
+            `<div class="result fail">
+            ❌ NOT ELIGIBLE<br>
+            Entry Blocked
+            </div>`
+        }
 
-      ?
+        `;
 
-      `<div class="eligible">
-        ✅ ELIGIBLE — ENTRY ALLOWED
-        <br>
-        Fee Paid & Attendance ≥ 75%
-      </div>`
-
-      :
-
-      `<div class="blocked">
-        ❌ NOT ELIGIBLE — ENTRY BLOCKED
-        <br>
-        Fee unpaid or Attendance below 75%
-      </div>`
     }
 
-  `;
+    catch(error){
+
+        result.className="result fail";
+
+        result.innerHTML=
+            "❌ Verification Failed<br><br>" +
+            error.message;
+    }
+
 }
 
-
-// ===============================
-// START CAMERA SCANNER
-// ===============================
 
 const scanner =
-  new Html5QrcodeScanner(
+new Html5QrcodeScanner(
     "reader",
     {
-      fps:10,
-      qrbox:{
-        width:250,
-        height:250
-      }
+        fps:10,
+        qrbox:{
+            width:250,
+            height:250
+        }
     }
-  );
+);
 
 scanner.render(onScanSuccess);
 
@@ -288,3 +268,4 @@ scanner.render(onScanSuccess);
 
 </body>
 </html>
+    
