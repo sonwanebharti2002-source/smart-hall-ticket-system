@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>Hall Ticket Verification</title>
+
+<style>
+body{
+    margin:0;
+    font-family:Arial,sans-serif;
+    background:#f3f6fb;
+    color:#172033;
+}
+
+.wrap{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+}
+
+.card{
+    width:100%;
+    max-width:450px;
+    background:white;
+    border-radius:20px;
+    padding:25px;
+    box-shadow:0 10px 35px #17203320;
+}
+
+h1{
+    text-align:center;
+    margin:0 0 5px;
+}
+
+.sub{
+    text-align:center;
+    color:#667085;
+    margin-bottom:20px;
+}
+
+.status{
+    text-align:center;
+    padding:13px;
+    border-radius:10px;
+    font-weight:bold;
+    margin-bottom:15px;
+}
+
+.info{
+    border:1px solid #e6eaf0;
+    border-radius:14px;
+    overflow:hidden;
+}
+
+.row{
+    display:flex;
+    justify-content:space-between;
+    gap:15px;
+    padding:12px;
+    border-bottom:1px solid #eef1f5;
+    font-size:14px;
+}
+
+.row:last-child{
+    border-bottom:0;
+}
+
+.key{
+    color:#667085;
+}
+
+.value{
+    font-weight:bold;
+    text-align:right;
+}
+</style>
+</head>
+
+<body>
+
+<div class="wrap">
+
+<div class="card">
+
+<h1>Hall Ticket Verification</h1>
+
+<div class="sub">
+People Education Society<br>
+Mid-Sem Examination
+</div>
+
+<div id="status" class="status">
+Verifying...
+</div>
+
+<div id="info" class="info">
+</div>
+
+</div>
+
+</div>
+
+
+<script>
+
+const students = {
+
+"24021341912022":{
+name:"Ajay Gaikwad",
+branch:"CSE (Data Science)",
+year_sem:"3rd / 5th",
+fees_status:"Paid",
+attendance:85,
+bench_no:"B24",
+roll_no:24
+},
+
+"24021341912020":{
+name:"Atharv Dhole",
+branch:"CSE (Data Science)",
+year_sem:"3rd / 5th",
+fees_status:"Paid",
+attendance:65,
+bench_no:"B22",
+roll_no:22
+},
+
+"24021341912013":{
+name:"Gayatri Shende",
+branch:"CSE (Data Science)",
+year_sem:"3rd / 5th",
+fees_status:"Paid",
+attendance:80,
+bench_no:"B15",
+roll_no:15
+},
+
+"24021341912019":{
+name:"Pratik Dakle",
+branch:"CSE (Data Science)",
+year_sem:"3rd / 5th",
+fees_status:"Unpaid",
+attendance:60,
+bench_no:"B20",
+roll_no:20
+}
+
+};
+
+
+function verify(){
+
+const params =
+new URLSearchParams(window.location.search);
+
+const prn =
+params.get("prn");
+
+const status =
+document.getElementById("status");
+
+const info =
+document.getElementById("info");
+
+
+if(!prn || !students[prn]){
+
+status.textContent="❌ INVALID QR";
+
+status.style.background="#fff0f0";
+status.style.color="#b42318";
+
+return;
+
+}
+
+
+const s=students[prn];
+
+
+const eligible =
+s.fees_status==="Paid" &&
+s.attendance>=75;
+
+
+status.textContent =
+eligible
+?
+"✅ ELIGIBLE — ENTRY ALLOWED"
+:
+"❌ NOT ELIGIBLE — ENTRY BLOCKED";
+
+
+status.style.background =
+eligible
+?
+"#eaf8ef"
+:
+"#fff0f0";
+
+
+status.style.color =
+eligible
+?
+"#18733b"
+:
+"#b42318";
+
+
+info.innerHTML=`
+
+<div class="row">
+<span class="key">Name</span>
+<span class="value">${s.name}</span>
+</div>
+
+<div class="row">
+<span class="key">PRN</span>
+<span class="value">${prn}</span>
+</div>
+
+<div class="row">
+<span class="key">Branch</span>
+<span class="value">${s.branch}</span>
+</div>
+
+<div class="row">
+<span class="key">Year / Semester</span>
+<span class="value">${s.year_sem}</span>
+</div>
+
+<div class="row">
+<span class="key">Fees</span>
+<span class="value">${s.fees_status}</span>
+</div>
+
+<div class="row">
+<span class="key">Attendance</span>
+<span class="value">${s.attendance}%</span>
+</div>
+
+<div class="row">
+<span class="key">Roll No.</span>
+<span class="value">${s.roll_no}</span>
+</div>
+
+<div class="row">
+<span class="key">Allotted Bench</span>
+<span class="value">${s.bench_no}</span>
+</div>
+
+`;
+
+}
+
+
+verify();
+
+</script>
+
+</body>
+</html>
