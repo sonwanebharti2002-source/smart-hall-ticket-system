@@ -60,4 +60,23 @@ function login(){const p=document.getElementById("prn").value.trim(),pw=document
 function showStudent(s,p){document.getElementById("login").style.display="none";document.getElementById("dashboard").style.display="block";["name","branch","year","fees","attendance","roll","bench"].forEach((x,i)=>document.getElementById(x).textContent=[s.name,s.branch,s.year_sem,s.fees_status,s.attendance+"%",s.roll_no,s.bench_no][i]);document.getElementById("dprn").textContent=p;const ok=s.fees_status==="Paid"&&s.attendance>=75,e=document.getElementById("eligibility");e.textContent=ok?"ELIGIBLE — Fee Paid & Attendance ≥ 75%":"NOT ELIGIBLE — Entry Blocked";e.style.background=ok?"#eaf8ef":"#fff0f0";e.style.color=ok?"#18733b":"#b42318";document.getElementById("status").textContent=ok?"ELIGIBLE":"BLOCKED"}
 function logout(){document.getElementById("dashboard").style.display="none";document.getElementById("login").style.display="block";document.getElementById("password").value=""}
 </script>
+  <div style="text-align:center;margin-top:25px;">
+  <h3>Dynamic QR Verification</h3>
+
+  <div id="qrcode"></div>
+
+  <p style="color:#666;">
+    Scan this QR to verify hall ticket
+  </p>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<script>
+new QRCode(document.getElementById("qrcode"), {
+  text: "PRN: 24021341912022 | Name: Ajay Gaikwad | Branch: CSE (Data Science) | Fees: Paid | Attendance: 85% | Roll No: 24 | Bench: B24 | Status: ELIGIBLE",
+  width: 180,
+  height: 180
+});
+</script>
 </body></html>
