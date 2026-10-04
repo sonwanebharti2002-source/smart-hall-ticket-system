@@ -104,6 +104,7 @@ const SUPABASE_URL =
 const SUPABASE_KEY =
 "sb_publishable_y5oAZE8Hda93X-EedG5FTw_MNoV97pD";
 
+
 async function verifyStudent(prn){
 
     const controller = new AbortController();
@@ -154,20 +155,7 @@ async function verifyStudent(prn){
         clearTimeout(timeout);
     }
 }
-
-
     
-        
-        
-    
-
-    const data = await response.json();
-
-    if(!response.ok){
-        th
-
-    return data;
-}
 
 
 async function onScanSuccess(decodedText){
@@ -300,4 +288,3 @@ scanner.render(onScanSuccess);
 
 </body>
 </html>
-    
