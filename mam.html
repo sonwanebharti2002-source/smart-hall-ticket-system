@@ -97,11 +97,30 @@ Scan a student's QR code.
 const SUPABASE_URL = "https://xxkqbwkstmwbqkhmiwwk.supabase.co";
 const SUPABASE_KEY = "sb_publishable_y5oAZE8Hda93X-EedG5FTw_MNoV97pD";
 
-const supabaseClient =
-  window.supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_KEY
+async function verifyStudent(verificationId) {
+  const response = await fetch(
+    SUPABASE_URL + "/rest/v1/rpc/verify_student",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "apikey": SUPABASE_KEY,
+        "Authorization": "Bearer " + SUPABASE_KEY
+      },
+      body: JSON.stringify({
+        verification_id: verificationId
+      })
+    }
   );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || data.error_description || JSON.stringify(data));
+  }
+
+  return data;
+}
 
 
 // ===============================
@@ -137,10 +156,17 @@ async function onScanSuccess(decodedText){
 
   const verificationId = decodedText.trim();
 
-const { data, error } = await supabaseClient
-  .rpc("verify_student", {
-    verification_id: verificationId
-  });
+let data;
+
+try {
+  data = await verifyStudent(decodedText.trim());
+} catch (error) {
+  result.innerHTML =
+    "<div class='error'>❌ Database verification failed<br><br>" +
+    "Error: " + error.message +
+    "</div>";
+  return;
+}
 
   if(error){
     result.innerHTML =
