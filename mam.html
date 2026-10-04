@@ -1,45 +1,70 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Invigilator QR Scanner</title>
+<title>Invigilator Verification</title>
 
 <script src="https://unpkg.com/html5-qrcode"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 body{
-  font-family:Arial;
+  font-family:Arial,sans-serif;
   background:#f3f6fb;
   margin:0;
   padding:20px;
+  color:#172033;
 }
 .card{
-  max-width:450px;
+  max-width:480px;
   margin:auto;
   background:white;
-  padding:25px;
+  padding:24px;
   border-radius:20px;
-  box-shadow:0 10px 30px #0002;
+  box-shadow:0 10px 35px #0002;
 }
-h1{text-align:center}
-#reader{
-  margin-top:20px;
-}
+h1{text-align:center;margin-bottom:5px}
+.sub{text-align:center;color:#667085;margin-bottom:20px}
+#reader{width:100%;margin:auto}
 .result{
   margin-top:20px;
-  padding:15px;
-  border-radius:12px;
+  padding:18px;
+  border-radius:14px;
   background:#f5f7fa;
 }
-button{
-  width:100%;
-  padding:14px;
-  border:0;
-  border-radius:10px;
-  background:#173b8f;
-  color:white;
-  font-size:16px;
+.row{
+  display:flex;
+  justify-content:space-between;
+  padding:9px 0;
+  border-bottom:1px solid #e5e7eb;
+}
+.key{color:#667085}
+.value{font-weight:bold}
+.eligible{
+  margin-top:18px;
+  padding:15px;
+  border-radius:12px;
+  background:#eaf8ef;
+  color:#18733b;
+  font-weight:bold;
+  text-align:center;
+}
+.blocked{
+  margin-top:18px;
+  padding:15px;
+  border-radius:12px;
+  background:#fff0f0;
+  color:#b42318;
+  font-weight:bold;
+  text-align:center;
+}
+.error{
+  padding:15px;
+  border-radius:12px;
+  background:#fff0f0;
+  color:#b42318;
+  text-align:center;
 }
 </style>
 </head>
@@ -48,40 +73,189 @@ button{
 
 <div class="card">
 
-<h1>Invigilator Scanner</h1>
+<h1>Invigilator QR Scanner</h1>
 
-<p style="text-align:center;">
+<div class="sub">
 People Education Society<br>
 Mid-Sem Examination
-</p>
+</div>
 
 <div id="reader"></div>
 
 <div id="result" class="result">
-QR scan केल्यावर student information येथे दिसेल.
+Scan a student's QR code.
 </div>
 
 </div>
 
 <script>
 
-function onScanSuccess(decodedText){
+// ===============================
+// SUPABASE CONNECTION
+// ===============================
 
-document.getElementById("result").innerHTML =
-"<h3>QR Detected ✅</h3>" +
-"<p>Verification ID:</p>" +
-"<b>"+decodedText+"</b>" +
-"<p style='color:#b42318'>Database verification पुढच्या step मध्ये जोडू.</p>";
+const SUPABASE_URL = "https://xxkqbwkstmwbqkhmiwwk.supabase.co/rest/v1/";
+const SUPABASE_KEY = "sb_publishable_y5oAZE8Hda93X-EedG5FTw_MNoV97pDeyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4a3Fid2tzdG13YnFraG1pd3drIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEwODY2MTgsImV4cCI6MjEwNjY2MjYxOH0.4gXmL4C6DpHg8lcPiecmBB-H66VlDtnP4rfjfTc8vlA";
 
+const supabaseClient =
+  window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
+
+
+// ===============================
+// QR SCAN
+// ===============================
+
+async function onScanSuccess(decodedText){
+
+  // Stop scanner after successful scan
+  try{
+    await scanner.clear();
+  }catch(e){}
+
+  const result = document.getElementById("result");
+
+  result.innerHTML =
+    "<p>Checking student record...</p>";
+
+  // Accept only our verification format
+  if(!decodedText.startsWith("VERIFY-")){
+
+    result.innerHTML =
+      "<div class='error'>" +
+      "❌ Invalid Hall Ticket QR" +
+      "</div>";
+
+    return;
+  }
+
+  // ===============================
+  // DATABASE VERIFICATION
+  // ===============================
+
+  const { data, error } =
+    await supabaseClient.rpc(
+      "verify_student",
+      {
+        verification_id: decodedText
+      }
+    );
+
+  if(error){
+
+    console.error(error);
+
+    result.innerHTML =
+      "<div class='error'>" +
+      "❌ Database verification failed." +
+      "</div>";
+
+    return;
+  }
+
+  if(!data || data.length === 0){
+
+    result.innerHTML =
+      "<div class='error'>" +
+      "❌ Student record not found." +
+      "</div>";
+
+    return;
+  }
+
+  const student = data[0];
+
+  // ===============================
+  // DISPLAY STUDENT INFORMATION
+  // ===============================
+
+  result.innerHTML = `
+
+    <h2 style="margin-top:0;">
+      Student Verified
+    </h2>
+
+    <div class="row">
+      <span class="key">Name</span>
+      <span class="value">${student.name}</span>
+    </div>
+
+    <div class="row">
+      <span class="key">PRN</span>
+      <span class="value">${student.prn}</span>
+    </div>
+
+    <div class="row">
+      <span class="key">Branch</span>
+      <span class="value">${student.branch}</span>
+    </div>
+
+    <div class="row">
+      <span class="key">Year / Semester</span>
+      <span class="value">${student.year_sem}</span>
+    </div>
+
+    <div class="row">
+      <span class="key">Fees</span>
+      <span class="value">${student.fees_status}</span>
+    </div>
+
+    <div class="row">
+      <span class="key">Attendance</span>
+      <span class="value">${student.attendance}%</span>
+    </div>
+
+    <div class="row">
+      <span class="key">Roll No.</span>
+      <span class="value">${student.roll_no}</span>
+    </div>
+
+    <div class="row">
+      <span class="key">Allotted Bench</span>
+      <span class="value">${student.bench_no}</span>
+    </div>
+
+    ${
+      student.eligible
+
+      ?
+
+      `<div class="eligible">
+        ✅ ELIGIBLE — ENTRY ALLOWED
+        <br>
+        Fee Paid & Attendance ≥ 75%
+      </div>`
+
+      :
+
+      `<div class="blocked">
+        ❌ NOT ELIGIBLE — ENTRY BLOCKED
+        <br>
+        Fee unpaid or Attendance below 75%
+      </div>`
+    }
+
+  `;
 }
 
-const scanner = new Html5QrcodeScanner(
-"reader",
-{
-fps:10,
-qrbox:{width:250,height:250}
-}
-);
+
+// ===============================
+// START CAMERA SCANNER
+// ===============================
+
+const scanner =
+  new Html5QrcodeScanner(
+    "reader",
+    {
+      fps:10,
+      qrbox:{
+        width:250,
+        height:250
+      }
+    }
+  );
 
 scanner.render(onScanSuccess);
 
